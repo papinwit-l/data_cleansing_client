@@ -17,14 +17,6 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Home />,
-      },
-      {
-        path: "/data-sheet",
-        element: <DataSheet />,
-      },
-      {
-        path: "/slide-report",
         element: (
           <DataProvider>
             <SlideRport />

@@ -13,6 +13,17 @@ import {
   calculateComparison,
 } from "../utils/dataUtils";
 
+export const fetchData = async (id, endpoint) => {
+  try {
+    const response = await axiosInstance.get(`/data-sheets/${endpoint}/${id}`);
+    const rawData = response.data.data;
+    return rawData;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
 // Main data fetching service
 export const fetchDataSheet = async (dataType, id, options = {}) => {
   const {
