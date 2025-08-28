@@ -9,7 +9,6 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useData } from "@/contexts/dataContext";
 import domtoimage from "dom-to-image";
-import axios from "axios";
 import React from "react";
 import {
   Presentation,
@@ -17,46 +16,12 @@ import {
   AlertCircle,
   ExternalLink,
 } from "lucide-react";
-import GDNSlide from "@/components/slides/GDNSlide";
-import DiscoverySlide from "@/components/slides/DiscoverySlide";
 import TitleSlide from "@/components/slides/TitleSlide";
-import FacebookReachSlide01 from "@/components/slides/FacebookReachSlide01";
-import FacebookReachSlide02 from "@/components/slides/FacebookReachSlide02";
-import SectionSlide from "@/components/slides/SectionSlide";
-import FacebookEngagementSlide01 from "@/components/slides/FacebookEngagementSlide01";
-import FacebookEngagementSlide02 from "@/components/slides/FacebookEngagementSlide02";
-import FacebookAwarenessSlide01 from "@/components/slides/FacebookAwarenessSlide01";
-import FacebookAwarenessSlide02 from "@/components/slides/FacebookAwarenessSlide02";
-import FacebookAwarenessSlide02PicTable from "@/components/slides/FacebookAwarenessSlide02PicTable";
-import EndSlide from "@/components/slides/EndSlide";
-import Overall from "@/components/slides/Overall";
-import FacebookMessageSlide01 from "@/components/slides/FacebookMessageSlide01";
-import FacebookMessageSlide02 from "@/components/slides/FacebookMessageSlide02";
-import FacebookLeadSlide01 from "@/components/slides/FacebookLeadSlide01";
-import FacebookLeadSlide02 from "@/components/slides/FacebookLeadSlide02";
-import FacebookConversionSlide01 from "@/components/slides/FacebookConversionSlide01";
-import FacebookConversionSlide02 from "@/components/slides/FacebookConversionSlide02";
-import SEMConversionSlide from "@/components/slides/SEMConversionSlide";
-import SEMClickSlide from "@/components/slides/SEMClickSlide";
-import YoutubeSlide from "@/components/slides/YoutubeSlide";
-import FacebookTrafficSlide01 from "@/components/slides/FacebookTrafficSlide01";
-import FacebookTrafficSlide02 from "@/components/slides/FacebookTrafficSlide02";
-import FacebookVideoSlide01 from "@/components/slides/FacebookVideoSlide01";
-import FacebookVideoSlide02 from "@/components/slides/FacebookVideoSlide02";
-import FacebookCatalogSlide01 from "@/components/slides/FacebookCatalogSlide01";
-import FacebookCatalogSlide02 from "@/components/slides/FacebookCatalogSlide02";
-import TiktokReachSlide01 from "@/components/slides/TiktokReachSlide01";
-import TiktokVideoSlide01 from "@/components/slides/TiktokVideoSlide01";
-import TiktokTrafficSlide01 from "@/components/slides/TiktokTrafficSlide01";
-import TiktokLeadSlide01 from "@/components/slides/TiktokLeadSlide01";
-import TiktokConversionSlide01 from "@/components/slides/TiktokConversionSlide01";
-import LineReachSlide01 from "@/components/slides/LineReachSlide01";
-import LineGainFriendsSlide01 from "@/components/slides/LineGainFriendsSlide01";
-import TaboolaSlide from "@/components/slides/TaboolaSlide";
 import { EXPORT_SLIDE_COMPONENT_LISTS } from "@/configs/exportSlideConfigs";
 import axiosInstance from "@/configs/axiosConfigs";
-import MediaPlan from "@/components/slides/MediaPlan";
-import { tableProcessing } from "@/utils/mediaPlanProcessing";
+import ExampleDataTable from "@/components/charts-tables/exampleDataTable";
+import { SHEETS_EXPORT_OPTIONS } from "@/configs/exportSheetsConfig";
+import { prepareDataForExport } from "@/utils/dataProcessors";
 
 function SlideReport() {
   const [isExporting, setIsExporting] = React.useState(false);
@@ -72,8 +37,24 @@ function SlideReport() {
 
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
-  const { fetchData, enableDateRange, setEnableDateRange } = useData();
-  const [mediaPlanData, setMediaPlanData] = React.useState(null);
+  const {
+    fetchData,
+    enableDateRange,
+    setEnableDateRange,
+    AllData,
+    setAllData,
+    UniqueData,
+    setUniqueData,
+    FilteredSales,
+    setFilteredSales,
+    UniqueFilteredSales,
+    setUniqueFilteredSales,
+    RawFilteredSalesOnly,
+    setRawFilteredSalesOnly,
+    FilteredSalesOnly,
+    setFilteredSalesOnly,
+    exportSheetsURL,
+  } = useData();
 
   const handleProjectNameChange = (event) => {
     setProjectName(event.target.value);
@@ -487,22 +468,6 @@ function SlideReport() {
     }
   };
 
-  const handleGetMediaPlan = async () => {
-    try {
-      const response = await axiosInstance.get(
-        `/data-sheets/media-plan/${sheetsID}`
-      );
-      const rawData = response.data.data;
-      // console.log("🎯 rawData | mediaplan:", rawData);
-
-      const { topTable, middleTable, bottomTable } = tableProcessing(rawData);
-
-      setMediaPlanData({ topTable, middleTable, bottomTable });
-    } catch (error) {
-      console.error("Error fetching media plan:", error);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 relative">
       {/* Sidebar Component */}
@@ -539,7 +504,6 @@ function SlideReport() {
             <h1 className="text-xl font-bold text-slate-900">
               Slide Report Generator
             </h1>
-            <button onClick={() => handleGetMediaPlan()}>TEST</button>
           </div>
           <div className="ml-auto text-sm text-slate-600">
             Transform your Google Sheets data into beautiful presentation slides
@@ -574,66 +538,13 @@ function SlideReport() {
               </Alert>
             )}
 
-            <MediaPlan mediaPlanData={mediaPlanData} />
-
             {/* Preview Panel */}
             {slideGenerated ? (
               <div className="w-full flex flex-col items-center gap-10">
+                <a href={exportSheetsURL} target="_blank">
+                  {exportSheetsURL}
+                </a>
                 <TitleSlide projectName={projectName} reportType={reportType} />
-                <Overall />
-                <SectionSlide
-                  title={"Facebook"}
-                  componentID={"facebook-section-component"}
-                />
-                <FacebookAwarenessSlide01 />
-                <FacebookAwarenessSlide02 />
-                {/* <FacebookAwarenessSlide02PicTable /> */}
-                <FacebookReachSlide01 />
-                <FacebookReachSlide02 />
-                <FacebookEngagementSlide01 />
-                <FacebookEngagementSlide02 />
-                <FacebookTrafficSlide01 />
-                <FacebookTrafficSlide02 />
-                <FacebookVideoSlide01 />
-                <FacebookVideoSlide02 />
-                <FacebookMessageSlide01 />
-                <FacebookMessageSlide02 />
-                <FacebookLeadSlide01 />
-                <FacebookLeadSlide02 />
-                <FacebookConversionSlide01 />
-                <FacebookConversionSlide02 />
-                <FacebookCatalogSlide01 />
-                <FacebookCatalogSlide02 />
-                <SectionSlide
-                  title={"Google"}
-                  componentID={"google-section-component"}
-                />
-                <SEMConversionSlide />
-                <SEMClickSlide />
-                <GDNSlide />
-                <DiscoverySlide />
-                <YoutubeSlide />
-                <SectionSlide
-                  title={"Tiktok"}
-                  componentID={"tiktok-section-component"}
-                />
-                <TiktokReachSlide01 />
-                <TiktokVideoSlide01 />
-                <TiktokTrafficSlide01 />
-                <TiktokLeadSlide01 />
-                <TiktokConversionSlide01 />
-                <SectionSlide
-                  title={"Line"}
-                  componentID={"line-section-component"}
-                />
-                <LineReachSlide01 />
-                <LineGainFriendsSlide01 />
-                <SectionSlide
-                  title={"Taboola"}
-                  componentID={"taboola-section-component"}
-                />
-                <TaboolaSlide />
-                <EndSlide />
               </div>
             ) : (
               <Card className="h-96 flex items-center justify-center">
@@ -654,6 +565,33 @@ function SlideReport() {
                   </div>
                 </CardContent>
               </Card>
+            )}
+
+            {AllData.length > 0 && (
+              <div className="">
+                <ExampleDataTable data={AllData} tableTitle="All Data" />
+              </div>
+            )}
+            {UniqueData.length > 0 && (
+              <div className="">
+                <ExampleDataTable data={UniqueData} tableTitle="Unique Data" />
+              </div>
+            )}
+            {FilteredSales.length > 0 && (
+              <div className="">
+                <ExampleDataTable
+                  data={FilteredSales}
+                  tableTitle="Filtered Sales"
+                />
+              </div>
+            )}
+            {UniqueFilteredSales.length > 0 && (
+              <div className="">
+                <ExampleDataTable
+                  data={UniqueFilteredSales}
+                  tableTitle="Unique Filtered Sales"
+                />
+              </div>
             )}
           </div>
         </main>

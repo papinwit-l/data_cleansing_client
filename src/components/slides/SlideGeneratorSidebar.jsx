@@ -35,6 +35,7 @@ import {
   Clock,
 } from "lucide-react";
 import DateRangePickerV2 from "./utils/DateRangePickerV2";
+import axiosInstance from "@/configs/axiosConfigs";
 
 const SlideGeneratorSidebar = ({
   isOpen,
@@ -61,6 +62,13 @@ const SlideGeneratorSidebar = ({
 
   // Storage key for localStorage
   const STORAGE_KEY = "slide_generator_saved_urls";
+
+  const handleCheckFile = async () => {
+    const response = await axiosInstance.get(
+      `/data-sheets/check-file-type/${sheetsID}`
+    );
+    console.log("🎯 checkFileType result:", response.data);
+  };
 
   // Load saved URLs from localStorage on component mount
   useEffect(() => {
@@ -410,6 +418,8 @@ const SlideGeneratorSidebar = ({
               </CardContent>
             </Card>
           </div>
+
+          <Button onClick={handleCheckFile}>Check File Type</Button>
 
           {/* Actions Section */}
           {slideGenerated && (

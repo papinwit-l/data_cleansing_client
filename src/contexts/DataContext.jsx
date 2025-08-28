@@ -25,7 +25,14 @@ export const DataProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [AllData, setAllData] = useState(null);
+  const [AllData, setAllData] = useState([]);
+  const [UniqueData, setUniqueData] = useState([]);
+  const [FilteredSales, setFilteredSales] = useState([]);
+  const [UniqueFilteredSales, setUniqueFilteredSales] = useState([]);
+  const [RawFilteredSalesOnly, setRawFilteredSalesOnly] = useState([]);
+  const [FilteredSalesOnly, setFilteredSalesOnly] = useState([]);
+
+  const [exportSheetsURL, setExportSheetsURL] = useState("");
 
   const getFBDemographicData = async (
     id,
@@ -43,12 +50,95 @@ export const DataProvider = ({ children }) => {
 
   const getAllData = async (id) => {
     try {
-      const result = await fetchData(id, "get-all-data");
-      setAllData(result);
+      const result = await fetchDataSheet(id, "get-all-data");
+      console.log("getAllData result:", result);
+      const {
+        rawData,
+        uniqueData,
+        filteredSales,
+        uniqueFilteredSales,
+        rawFilteredSalesOnly,
+        filteredSalesOnly,
+      } = result;
+
+      // Set the state variables
+      setAllData(rawData);
+      setUniqueData(uniqueData);
+      setFilteredSales(filteredSales);
+      setUniqueFilteredSales(uniqueFilteredSales);
+      setRawFilteredSalesOnly(rawFilteredSalesOnly);
+      setFilteredSalesOnly(filteredSalesOnly);
+
+      // Export to sheets using fresh data
+      await exportToSheets(result);
     } catch (error) {
       console.error("Error fetching all data:", error);
       throw error;
     }
+  };
+
+  const exportToSheets = async (dataResult) => {
+    try {
+      if (!dataResult?.rawData || dataResult.rawData.length === 0) {
+        throw new Error("No raw data available for export");
+      }
+
+      const headers = Object.keys(dataResult.rawData[0]);
+
+      // Create main sheet
+      const payload = {
+        title: "Social Media Monitoring Report",
+        tableData: dataResult.rawData,
+        headers: headers,
+        sheetName: "RAW_DATA",
+      };
+
+      const response = await axiosInstance.post(
+        "/data-sheets/create-sheet-with-table",
+        payload
+      );
+
+      const spreadsheetId = response.data.spreadsheetId;
+
+      // Add other sheets
+      const additionalSheets = [
+        { data: dataResult.uniqueData, name: "UNIQUE_DATA" },
+        { data: dataResult.filteredSales, name: "FILTERED_SALES" },
+        { data: dataResult.uniqueFilteredSales, name: "UNIQUE_FILTERED_SALES" },
+        {
+          data: dataResult.rawFilteredSalesOnly,
+          name: "RAW_FILTERED_SALES_ONLY",
+        },
+        { data: dataResult.filteredSalesOnly, name: "FILTERED_SALES_ONLY" },
+      ];
+
+      for (const sheet of additionalSheets) {
+        if (sheet.data && sheet.data.length > 0) {
+          await handleAddSheetTab(spreadsheetId, sheet.data, sheet.name);
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      }
+
+      setExportSheetsURL(response.data.spreadsheetUrl);
+      window.open(response.data.spreadsheetUrl, "_blank");
+    } catch (error) {
+      console.error("Export error:", error);
+      setError(error.response?.data?.error || error.message);
+    }
+  };
+
+  const handleAddSheetTab = async (spreadsheetId, data, sheetName) => {
+    const headers = Object.keys(data[0]);
+    await axiosInstance.post("/data-sheets/export-to-existing-sheet", {
+      spreadsheetId,
+      data: [
+        headers,
+        ...data.map((item) => headers.map((header) => item[header] || "")),
+      ],
+      sheetName,
+      startCell: "A1",
+      clearExisting: true,
+    });
   };
 
   // Main fetch function
@@ -88,6 +178,19 @@ export const DataProvider = ({ children }) => {
     // All Data
     AllData,
     setAllData,
+    UniqueData,
+    setUniqueData,
+    FilteredSales,
+    setFilteredSales,
+    UniqueFilteredSales,
+    setUniqueFilteredSales,
+    RawFilteredSalesOnly,
+    setRawFilteredSalesOnly,
+    FilteredSalesOnly,
+    setFilteredSalesOnly,
+
+    // Export to sheets
+    exportSheetsURL,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
