@@ -82,7 +82,7 @@ export const fetchDataSheet = async (id, endpoint) => {
 
     // remove duplicates by message and account and platform
     const uniqueValues = removeDuplicates(dataObjects);
-    console.log("🎯 uniqueValues result:", uniqueValues);
+    // console.log("🎯 uniqueValues result:", uniqueValues);
 
     // remove sales messages from dataObjects
     const rawFilteredSales = [];
@@ -90,16 +90,11 @@ export const fetchDataSheet = async (id, endpoint) => {
       const messages = processMessages(item.Message);
       const { results } = messages;
       const { isSales } = results[0];
-      // if (index === 0) {
-      //   console.log("🎯 isSales result:", isSales);
-      //   console.log("🎯 results result:", results);
-      //   console.log("🎯 messages result:", messages);
-      // }
       const resultItem = { ...item, isSales };
       rawFilteredSales.push(resultItem);
       return isSales;
     });
-    console.log("🎯 rawFilteredSales result:", rawFilteredSales);
+    // console.log("🎯 rawFilteredSales result:", rawFilteredSales);
 
     // remove sales messages
     const filteredSales = [];
@@ -107,16 +102,11 @@ export const fetchDataSheet = async (id, endpoint) => {
       const messages = processMessages(item.Message);
       const { results } = messages;
       const { isSales } = results[0];
-      // if (index === 0) {
-      //   console.log("🎯 isSales result:", isSales);
-      //   console.log("🎯 results result:", results);
-      //   console.log("🎯 messages result:", messages);
-      // }
       const resultItem = { ...item, isSales };
       filteredSales.push(resultItem);
       return isSales;
     });
-    console.log("🎯 filteredSales result:", filteredSales);
+    // console.log("🎯 filteredSales result:", filteredSales);
 
     return {
       rawData: dataObjects,

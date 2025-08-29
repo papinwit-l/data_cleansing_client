@@ -1,4 +1,4 @@
-import { SALE_CONFIG } from "@/configs/keywordConfig";
+import { SALE_CONFIG, SENTIMENT_CONFIG } from "@/configs/keywordConfig";
 
 export const removeDuplicates = (items) => {
   let existingKey = [];
@@ -171,4 +171,116 @@ export const prepareDataForExport = (rawData) => {
   });
 
   return { headers, rows };
+};
+
+export const processMessagesSentiment = (data) => {
+  const dataWithSentiment = data.map((item) => {
+    const sentiment = analyzeSentiment(item.Message);
+    return { ...item, "New Sentiment": sentiment };
+  });
+
+  return dataWithSentiment;
+};
+
+const analyzeSentiment = (text) => {
+  if (!text.trim()) return null;
+
+  // Normalize text for analysis
+  const normalizedText = text.toLowerCase();
+
+  // Define sentiment keywords for Thai
+  const positiveKeywords = SENTIMENT_CONFIG.positiveKeywords;
+  const negativeKeywords = SENTIMENT_CONFIG.negativeKeywords;
+  const neutralKeywords = SENTIMENT_CONFIG.neutralKeywords;
+
+  // Count keyword occurrences
+  let positiveScore = 0;
+  let negativeScore = 0;
+  let neutralScore = 0;
+
+  positiveKeywords.forEach((keyword) => {
+    const regex = new RegExp(keyword, "gi");
+    const matches = normalizedText.match(regex);
+    if (matches) positiveScore += matches.length;
+  });
+
+  negativeKeywords.forEach((keyword) => {
+    const regex = new RegExp(keyword, "gi");
+    const matches = normalizedText.match(regex);
+    if (matches) negativeScore += matches.length;
+  });
+
+  neutralKeywords.forEach((keyword) => {
+    const regex = new RegExp(keyword, "gi");
+    const matches = normalizedText.match(regex);
+    if (matches) neutralScore += matches.length * 0.5; // Lower weight for neutral
+  });
+
+  // Additional context analysis
+  // Check for promotional/sales content (usually positive)
+  const salesIndicators = SENTIMENT_CONFIG.salesIndicators;
+  salesIndicators.forEach((indicator) => {
+    if (normalizedText.includes(indicator)) positiveScore += 1;
+  });
+
+  // Check for product recommendations (usually positive)
+  if (normalizedText.includes("แนะนำ") || normalizedText.includes("ขอแนะนำ")) {
+    positiveScore += 2;
+  }
+
+  // Check for Thai internet slang and expressions
+  const laughingPattern = text.match(/5{3,}/g); // 555+ laughing
+  if (laughingPattern) {
+    positiveScore += laughingPattern.length * 2; // Laughing is generally positive
+  }
+
+  // Check for multiple exclamations (can be positive or negative, context dependent)
+  const excitementPattern = text.match(/[!]{2,}/g);
+  if (excitementPattern) {
+    // If already has positive indicators, boost positive; otherwise it might be negative
+    if (positiveScore > negativeScore) {
+      positiveScore += excitementPattern.length;
+    } else if (negativeScore > positiveScore) {
+      negativeScore += excitementPattern.length;
+    }
+  }
+
+  // Check for repeated vowels (indicates excitement/emotion)
+  const stretchedWords = text.match(/[าอออออ]{3,}|[ววววว]{3,}|[นุนุนุ]{3,}/g);
+  if (stretchedWords) {
+    // Generally indicates positive excitement in Thai social media
+    positiveScore += stretchedWords.length;
+  }
+
+  // Check for emojis
+  const positiveEmojis = text.match(SENTIMENT_CONFIG.positiveEmojis);
+  const negativeEmojis = text.match(SENTIMENT_CONFIG.negativeEmojis);
+
+  if (positiveEmojis) positiveScore += positiveEmojis.length;
+  if (negativeEmojis) negativeScore += negativeEmojis.length;
+
+  // Special handling for complaints/feedback posts
+  const complaintIndicators = SENTIMENT_CONFIG.complaintIndicators;
+  complaintIndicators.forEach((indicator) => {
+    if (normalizedText.includes(indicator)) {
+      negativeScore += 2; // Weight complaints heavily
+    }
+  });
+
+  // Calculate final sentiment
+  const totalScore = positiveScore + negativeScore + neutralScore;
+
+  if (totalScore === 0) return "neutral";
+
+  const positiveRatio = positiveScore / totalScore;
+  const negativeRatio = negativeScore / totalScore;
+
+  // Adjusted thresholds based on new data patterns
+  if (positiveScore > negativeScore && positiveRatio > 0.25) {
+    return "positive";
+  } else if (negativeScore > positiveScore && negativeRatio > 0.15) {
+    return "negative";
+  } else {
+    return "neutral";
+  }
 };

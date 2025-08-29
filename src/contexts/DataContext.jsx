@@ -1,9 +1,8 @@
 // contexts/DataContext.js
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { fetchDataSheet } from "../services/dataServices";
-import { createStateSettersMap } from "../utils/dataUtils";
-import { DEFAULT_METRICS } from "../configs/dataConfigs";
 import axiosInstance from "../configs/axiosConfigs"; // ✅ Updated: Use centralized axios
+import { processMessagesSentiment } from "@/utils/dataProcessors";
 
 const DataContext = createContext();
 
@@ -31,6 +30,7 @@ export const DataProvider = ({ children }) => {
   const [UniqueFilteredSales, setUniqueFilteredSales] = useState([]);
   const [RawFilteredSalesOnly, setRawFilteredSalesOnly] = useState([]);
   const [FilteredSalesOnly, setFilteredSalesOnly] = useState([]);
+  const [UniqueDataWithSentiment, setUniqueDataWithSentiment] = useState([]);
 
   const [exportSheetsURL, setExportSheetsURL] = useState("");
 
@@ -69,8 +69,14 @@ export const DataProvider = ({ children }) => {
       setRawFilteredSalesOnly(rawFilteredSalesOnly);
       setFilteredSalesOnly(filteredSalesOnly);
 
+      // Process sentiment for unique data with no sales messages
+      const uniqueDataWithSentiment =
+        processMessagesSentiment(uniqueFilteredSales);
+      setUniqueDataWithSentiment(uniqueDataWithSentiment);
+
       // Export to sheets using fresh data
-      await exportToSheets(result);
+      const exportData = { ...result, uniqueDataWithSentiment };
+      await exportToSheets(exportData);
     } catch (error) {
       console.error("Error fetching all data:", error);
       throw error;
@@ -101,16 +107,28 @@ export const DataProvider = ({ children }) => {
       const spreadsheetId = response.data.spreadsheetId;
 
       // Add other sheets
-      const additionalSheets = [
-        { data: dataResult.uniqueData, name: "UNIQUE_DATA" },
-        { data: dataResult.filteredSales, name: "FILTERED_SALES" },
-        { data: dataResult.uniqueFilteredSales, name: "UNIQUE_FILTERED_SALES" },
-        {
-          data: dataResult.rawFilteredSalesOnly,
-          name: "RAW_FILTERED_SALES_ONLY",
-        },
-        { data: dataResult.filteredSalesOnly, name: "FILTERED_SALES_ONLY" },
-      ];
+      // finding sheets to add to the spreadsheet
+      const remainingSheets = Object.keys(dataResult).filter(
+        (key) => key !== "rawData"
+      );
+
+      const additionalSheets = remainingSheets.map((sheetName) => {
+        return {
+          data: dataResult[sheetName],
+          name: sheetName,
+        };
+      });
+
+      // const additionalSheets = [
+      //   { data: dataResult.uniqueData, name: "UNIQUE_DATA" },
+      //   { data: dataResult.filteredSales, name: "FILTERED_SALES" },
+      //   { data: dataResult.uniqueFilteredSales, name: "UNIQUE_FILTERED_SALES" },
+      //   {
+      //     data: dataResult.rawFilteredSalesOnly,
+      //     name: "RAW_FILTERED_SALES_ONLY",
+      //   },
+      //   { data: dataResult.filteredSalesOnly, name: "FILTERED_SALES_ONLY" },
+      // ];
 
       for (const sheet of additionalSheets) {
         if (sheet.data && sheet.data.length > 0) {
@@ -129,7 +147,7 @@ export const DataProvider = ({ children }) => {
 
   const handleAddSheetTab = async (spreadsheetId, data, sheetName) => {
     const headers = Object.keys(data[0]);
-    await axiosInstance.post("/data-sheets/export-to-existing-sheet", {
+    await axiosInstance.post("/data-sheets/export-data-to-existing-sheet", {
       spreadsheetId,
       data: [
         headers,
@@ -188,6 +206,8 @@ export const DataProvider = ({ children }) => {
     setRawFilteredSalesOnly,
     FilteredSalesOnly,
     setFilteredSalesOnly,
+    UniqueDataWithSentiment,
+    setUniqueDataWithSentiment,
 
     // Export to sheets
     exportSheetsURL,
