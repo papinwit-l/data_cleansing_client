@@ -76,7 +76,7 @@ export const DataProvider = ({ children }) => {
 
       // Export to sheets using fresh data
       const exportData = { ...result, uniqueDataWithSentiment };
-      await exportToSheets(exportData);
+      // await exportToSheets(exportData);
     } catch (error) {
       console.error("Error fetching all data:", error);
       throw error;
