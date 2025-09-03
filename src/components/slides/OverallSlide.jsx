@@ -1,3 +1,4 @@
+import { useData } from "@/contexts/DataContext";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   BarChart,
@@ -15,57 +16,57 @@ import {
 } from "recharts";
 
 // Mock data context hook for demo
-const useData = () => {
-  const mockData = [
-    {
-      Account: "metave_may",
-      Message:
-        "มาเปิดรับออเดอร์จ้า กดสั่งวันนี้ผ่านออนไลน์ขอคนรอของได้นะคะ ราคาตามภาพ",
-      Source: "x",
-      "Post time": "2025-04-01 00:50:50",
-      Engagement: "6",
-      "Follower count": "182",
-      Sentiment: "Neutral",
-      Category: "Cerave",
-    },
-    {
-      Account: "after_shipping",
-      Message: "มาค่ะ♻️ ชุดเหยือกน้ำน่ารักมากจาก Pillowfort",
-      Source: "instagram",
-      "Post time": "2025-04-01 01:08:15",
-      Engagement: "0",
-      "Follower count": "0",
-      Sentiment: "Positive",
-      Category: "Cerave",
-    },
-    {
-      Account: "beauty_lover",
-      Source: "instagram",
-      "Post time": "2025-04-01 02:15:30",
-      Engagement: "15",
-      "Follower count": "1250",
-      Sentiment: "Positive",
-      Category: "Cerave",
-    },
-    {
-      Account: "skincare_tips",
-      Source: "x",
-      "Post time": "2025-04-01 03:22:45",
-      Engagement: "8",
-      "Follower count": "890",
-      Sentiment: "Neutral",
-      Category: "Cerave",
-    },
-  ];
+// const useData = () => {
+//   const mockData = [
+//     {
+//       Account: "metave_may",
+//       Message:
+//         "มาเปิดรับออเดอร์จ้า กดสั่งวันนี้ผ่านออนไลน์ขอคนรอของได้นะคะ ราคาตามภาพ",
+//       Source: "x",
+//       "Post time": "2025-04-01 00:50:50",
+//       Engagement: "6",
+//       "Follower count": "182",
+//       Sentiment: "Neutral",
+//       Category: "Cerave",
+//     },
+//     {
+//       Account: "after_shipping",
+//       Message: "มาค่ะ♻️ ชุดเหยือกน้ำน่ารักมากจาก Pillowfort",
+//       Source: "instagram",
+//       "Post time": "2025-04-01 01:08:15",
+//       Engagement: "0",
+//       "Follower count": "0",
+//       Sentiment: "Positive",
+//       Category: "Cerave",
+//     },
+//     {
+//       Account: "beauty_lover",
+//       Source: "instagram",
+//       "Post time": "2025-04-01 02:15:30",
+//       Engagement: "15",
+//       "Follower count": "1250",
+//       Sentiment: "Positive",
+//       Category: "Cerave",
+//     },
+//     {
+//       Account: "skincare_tips",
+//       Source: "x",
+//       "Post time": "2025-04-01 03:22:45",
+//       Engagement: "8",
+//       "Follower count": "890",
+//       Sentiment: "Neutral",
+//       Category: "Cerave",
+//     },
+//   ];
 
-  return {
-    loading: false,
-    error: null,
-    refetch: () => {},
-    AllData: mockData,
-    UniqueDataWithSentiment: mockData,
-  };
-};
+//   return {
+//     loading: false,
+//     error: null,
+//     refetch: () => {},
+//     AllData: mockData,
+//     UniqueDataWithSentiment: mockData,
+//   };
+// };
 
 // Analytics functions
 const groupDataBySource = (data) => {
@@ -407,10 +408,13 @@ function OverallSlide() {
   }
 
   return (
-    <div id="overall-slide">
-      <div className="flex flex-col py-7 px-10 border w-full max-w-7xl h-[720px] gap-2 relative group bg-white">
-        <SlideHeader title={"Overall"} />
-        <div className="flex flex-col justify-between h-full">
+    <div id="overall-slide" className="w-[1280px] h-[720px]">
+      <div className="flex flex-col w-full h-full bg-white border">
+        {/* Header */}
+        <div className="px-8 py-4 border-b">
+          <SlideHeader title={"Overall"} />
+        </div>
+        <div className="flex flex-col justify-between h-full p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-full">
             {/* Summary Metrics - Takes 1 column */}
             <div className="lg:col-span-1">

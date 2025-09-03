@@ -22,6 +22,9 @@ import axiosInstance from "@/configs/axiosConfigs";
 import ExampleDataTable from "@/components/charts-tables/exampleDataTable";
 import { SHEETS_EXPORT_OPTIONS } from "@/configs/exportSheetsConfig";
 import { prepareDataForExport } from "@/utils/dataProcessors";
+import OverallSlide from "@/components/slides/OverallSlide";
+import OverallSlide2 from "@/components/slides/OverallSlide2";
+import OverallSlide3 from "@/components/slides/OverallSlide3";
 
 function SlideReport() {
   const [isExporting, setIsExporting] = React.useState(false);
@@ -342,11 +345,11 @@ function SlideReport() {
     try {
       console.log("Starting export with Google Sheets image handling...");
 
-      // STEP 1: Convert all external images from Google Sheets to base64
-      await convertGoogleSheetsImagesToBase64();
+      // // STEP 1: Convert all external images from Google Sheets to base64
+      // await convertGoogleSheetsImagesToBase64();
 
-      // STEP 2: Ensure all images are fully loaded
-      await ensureImagesLoaded();
+      // // STEP 2: Ensure all images are fully loaded
+      // await ensureImagesLoaded();
 
       // STEP 3: Define slide components
       const slideComponents = EXPORT_SLIDE_COMPONENT_LISTS;
@@ -541,10 +544,13 @@ function SlideReport() {
             {/* Preview Panel */}
             {slideGenerated ? (
               <div className="w-full flex flex-col items-center gap-10">
-                <a href={exportSheetsURL} target="_blank">
+                {/* <a href={exportSheetsURL} target="_blank">
                   {exportSheetsURL}
                 </a>
-                <TitleSlide projectName={projectName} reportType={reportType} />
+                <TitleSlide projectName={projectName} reportType={reportType} /> */}
+                <OverallSlide />
+                <OverallSlide2 />
+                <OverallSlide3 />
               </div>
             ) : (
               <Card className="h-96 flex items-center justify-center">

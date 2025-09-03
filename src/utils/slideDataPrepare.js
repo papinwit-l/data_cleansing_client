@@ -1,3 +1,5 @@
+// slideDataPrepare.js
+
 const ExpampleData = [
   {
     Account: "metave_may",
@@ -189,20 +191,48 @@ export const calculateTotalEngagementBySource = (data) => {
   return engagementBySource;
 };
 
-export const summarizeEngagementData = (data) => {
+const getSentimentData = (data) => {
+  const groupBySourceArray = Object.entries(data);
+  // console.log("groupBySourceArray", groupBySourceArray);
+  const sentimentDataArray = groupBySourceArray.map(([key, value]) => {
+    const sentiment = value.reduce((acc, post) => {
+      const sentiment = post.Sentiment || "Unknown";
+      if (!acc[sentiment]) {
+        acc[sentiment] = [post];
+      } else {
+        acc[sentiment].push(post);
+      }
+      return acc;
+    }, {});
+    const summarySentiment = Object.keys(sentiment).reduce((acc, cur) => {
+      const count = sentiment[cur].length;
+      acc[cur] = count;
+      return acc;
+    }, {});
+    const result = {
+      source: key,
+      sentment: sentiment,
+      summarySentiment,
+    };
+    return result;
+  });
+  // console.log("sentimentDataArray", sentimentDataArray);
+  return sentimentDataArray;
+};
+
+export const prepareData = (data) => {
   // group data by source
   const groupedBySource = groupDataBySource(data);
 
-  // Find top engagement message and account from each source
-  const topBySource = getTopEngagementBySource(data);
+  // console.log("groupedBySource", groupedBySource);
 
-  // Calculate total engagement for each source
-  const totalEngagementBySource = calculateTotalEngagementBySource(data);
+  // group sentiment from each source
+  const sentimentData = getSentimentData(groupedBySource);
+  // console.log("sentimentData", sentimentData);
 
   const preparedData = {
     groupedBySource,
-    topBySource,
-    totalEngagementBySource,
+    sentimentData,
   };
   return preparedData;
 };
