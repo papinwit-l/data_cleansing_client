@@ -1,5 +1,5 @@
 import { useData } from "@/contexts/DataContext";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -11,62 +11,18 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
+  LabelList,
 } from "recharts";
 
 // Mock data context hook for demo
-// const useData = () => {
-//   const mockData = [
-//     {
-//       Account: "metave_may",
-//       Message:
-//         "มาเปิดรับออเดอร์จ้า กดสั่งวันนี้ผ่านออนไลน์ขอคนรอของได้นะคะ ราคาตามภาพ",
-//       Source: "x",
-//       "Post time": "2025-04-01 00:50:50",
-//       Engagement: "6",
-//       "Follower count": "182",
-//       Sentiment: "Neutral",
-//       Category: "Cerave",
-//     },
-//     {
-//       Account: "after_shipping",
-//       Message: "มาค่ะ♻️ ชุดเหยือกน้ำน่ารักมากจาก Pillowfort",
-//       Source: "instagram",
-//       "Post time": "2025-04-01 01:08:15",
-//       Engagement: "0",
-//       "Follower count": "0",
-//       Sentiment: "Positive",
-//       Category: "Cerave",
-//     },
-//     {
-//       Account: "beauty_lover",
-//       Source: "instagram",
-//       "Post time": "2025-04-01 02:15:30",
-//       Engagement: "15",
-//       "Follower count": "1250",
-//       Sentiment: "Positive",
-//       Category: "Cerave",
-//     },
-//     {
-//       Account: "skincare_tips",
-//       Source: "x",
-//       "Post time": "2025-04-01 03:22:45",
-//       Engagement: "8",
-//       "Follower count": "890",
-//       Sentiment: "Neutral",
-//       Category: "Cerave",
-//     },
-//   ];
 
-//   return {
-//     loading: false,
-//     error: null,
-//     refetch: () => {},
-//     AllData: mockData,
-//     UniqueDataWithSentiment: mockData,
-//   };
-// };
+// Utility function to format numbers with commas
+const formatNumber = (num) => {
+  if (num >= 1000) {
+    return num.toLocaleString();
+  }
+  return num.toString();
+};
 
 // Analytics functions
 const groupDataBySource = (data) => {
@@ -122,11 +78,28 @@ const calculateTotalEngagementBySource = (data) => {
 };
 
 const getSentimentData = (data) => {
-  return data.reduce((acc, post) => {
+  const sentimentCounts = data.reduce((acc, post) => {
     const sentiment = post.Sentiment || "Unknown";
     acc[sentiment] = (acc[sentiment] || 0) + 1;
     return acc;
   }, {});
+
+  // Calculate total for percentage calculation
+  const total = Object.values(sentimentCounts).reduce(
+    (sum, count) => sum + count,
+    0
+  );
+
+  // Add percentage to each sentiment
+  const sentimentWithPercentages = {};
+  Object.entries(sentimentCounts).forEach(([sentiment, count]) => {
+    sentimentWithPercentages[sentiment] = {
+      count,
+      percentage: total > 0 ? ((count / total) * 100).toFixed(1) : 0,
+    };
+  });
+
+  return sentimentWithPercentages;
 };
 
 const summarizeEngagementData = (data) => {
@@ -155,6 +128,60 @@ const SlideHeader = ({ title }) => (
   </div>
 );
 
+// Custom label function for external positioning
+const renderExternalLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+  index,
+  name,
+  value,
+}) => {
+  const RADIAN = Math.PI / 180;
+  const radius = outerRadius + 30; // Position outside the pie
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#374151"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      fontSize="11"
+      fontWeight="500"
+    >
+      {`${(percent * 100).toFixed(1)}%`}
+    </text>
+  );
+};
+
+// Custom tooltip that shows both count and percentage with formatted numbers
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white p-2 border border-gray-300 rounded shadow-lg">
+        <p className="font-medium">{data.name || label}</p>
+        <p className="text-sm">
+          Count:{" "}
+          <span className="font-semibold">
+            {formatNumber(data.value || data.posts)}
+          </span>
+        </p>
+        <p className="text-sm">
+          Percentage: <span className="font-semibold">{data.percentage}%</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 // Chart components
 const EngagementBySourceChart = ({ data }) => {
   const chartData = Object.entries(data).map(([source, info]) => ({
@@ -173,13 +200,17 @@ const EngagementBySourceChart = ({ data }) => {
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="source" tick={{ fontSize: 12 }} />
-          <YAxis tick={{ fontSize: 12 }} />
+          <YAxis
+            tick={{ fontSize: 12 }}
+            tickFormatter={(value) => formatNumber(value)}
+          />
           <Tooltip
             contentStyle={{
               backgroundColor: "rgba(255, 255, 255, 0.95)",
               border: "1px solid #ccc",
               borderRadius: "8px",
             }}
+            formatter={(value) => [formatNumber(value), "Engagement"]}
           />
           <Bar dataKey="engagement" fill="#3B82F6" radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -189,9 +220,10 @@ const EngagementBySourceChart = ({ data }) => {
 };
 
 const SentimentDistributionChart = ({ data }) => {
-  const chartData = Object.entries(data).map(([sentiment, count]) => ({
+  const chartData = Object.entries(data).map(([sentiment, info]) => ({
     name: sentiment,
-    value: count,
+    value: info.count,
+    percentage: parseFloat(info.percentage),
   }));
 
   const COLORS = {
@@ -201,47 +233,76 @@ const SentimentDistributionChart = ({ data }) => {
     Unknown: "#6B7280",
   };
 
+  // Custom label function for the pie chart
+  const renderCustomLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percentage,
+  }) => {
+    if (percentage < 5) return null; // Don't show labels for small slices
+
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+        fontSize="12"
+        fontWeight="bold"
+      >
+        {`${percentage.toFixed(0)}%`}
+      </text>
+    );
+  };
+
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm border">
       <h3 className="text-lg font-semibold mb-3 text-gray-700">
         Sentiment Distribution
       </h3>
-      <ResponsiveContainer width="100%" height={200}>
-        <PieChart>
-          <Pie
-            data={chartData}
-            cx="50%"
-            cy="50%"
-            innerRadius={40}
-            outerRadius={80}
-            paddingAngle={2}
-            dataKey="value"
-          >
-            {chartData.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS[entry.name] || "#6B7280"}
-              />
-            ))}
-          </Pie>
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "rgba(255, 255, 255, 0.95)",
-              border: "1px solid #ccc",
-              borderRadius: "8px",
-            }}
-          />
-        </PieChart>
-      </ResponsiveContainer>
-      <div className="flex flex-wrap justify-center gap-2 mt-2">
+      <div className="flex justify-center">
+        <ResponsiveContainer width="100%" height={140}>
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={renderCustomLabel}
+              innerRadius={30}
+              outerRadius={60}
+              paddingAngle={2}
+              dataKey="value"
+            >
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS[entry.name] || "#6B7280"}
+                />
+              ))}
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex flex-wrap justify-center gap-3 mt-3">
         {chartData.map((entry) => (
-          <div key={entry.name} className="flex items-center gap-1 text-xs">
+          <div key={entry.name} className="flex items-center gap-2 text-sm">
             <div
               className="w-3 h-3 rounded"
               style={{ backgroundColor: COLORS[entry.name] || "#6B7280" }}
             />
-            <span>
-              {entry.name}: {entry.value}
+            <span className="text-gray-700">
+              {entry.name}: {formatNumber(entry.value)} ({entry.percentage}%)
             </span>
           </div>
         ))}
@@ -251,10 +312,19 @@ const SentimentDistributionChart = ({ data }) => {
 };
 
 const PostCountBySourceChart = ({ data }) => {
+  // Calculate total posts for percentage calculation
+  const totalPosts = Object.values(data).reduce(
+    (sum, info) => sum + info.postCount,
+    0
+  );
+
   const chartData = Object.entries(data).map(([source, info]) => ({
     source: source.charAt(0).toUpperCase() + source.slice(1),
     posts: info.postCount,
-    percentage: parseFloat(info.percentage),
+    percentage:
+      totalPosts > 0 ? ((info.postCount / totalPosts) * 100).toFixed(1) : 0,
+    name: source.charAt(0).toUpperCase() + source.slice(1),
+    value: info.postCount,
   }));
 
   return (
@@ -262,33 +332,31 @@ const PostCountBySourceChart = ({ data }) => {
       <h3 className="text-lg font-semibold mb-3 text-gray-700">
         Posts by Source
       </h3>
-      <ResponsiveContainer width="100%" height={200}>
-        <PieChart>
-          <Pie
-            data={chartData}
-            cx="50%"
-            cy="50%"
-            outerRadius={80}
-            paddingAngle={3}
-            dataKey="posts"
-          >
-            {chartData.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={index % 2 === 0 ? "#8B5CF6" : "#EC4899"}
-              />
-            ))}
-          </Pie>
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "rgba(255, 255, 255, 0.95)",
-              border: "1px solid #ccc",
-              borderRadius: "8px",
-            }}
-          />
-        </PieChart>
-      </ResponsiveContainer>
-      <div className="flex flex-wrap justify-center gap-2 mt-2">
+      <div className="flex justify-center">
+        <ResponsiveContainer width="100%" height={200}>
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              labelLine={true}
+              label={renderExternalLabel}
+              outerRadius={65}
+              paddingAngle={3}
+              dataKey="posts"
+            >
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={index % 2 === 0 ? "#8B5CF6" : "#EC4899"}
+                />
+              ))}
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex flex-wrap justify-center gap-2 mt-1">
         {chartData.map((entry, index) => (
           <div key={entry.source} className="flex items-center gap-1 text-xs">
             <div
@@ -298,7 +366,7 @@ const PostCountBySourceChart = ({ data }) => {
               }}
             />
             <span>
-              {entry.source}: {entry.posts}
+              {entry.source}: {formatNumber(entry.posts)} ({entry.percentage}%)
             </span>
           </div>
         ))}
@@ -321,14 +389,26 @@ const SummaryMetrics = ({ data }) => {
   const sourcesCount = Object.keys(data.totalEngagementBySource).length;
 
   const metrics = [
-    { label: "Total Posts", value: totalPosts, color: "bg-blue-500" },
+    {
+      label: "Total Posts",
+      value: formatNumber(totalPosts),
+      color: "bg-blue-500",
+    },
     {
       label: "Total Engagement",
-      value: totalEngagement,
+      value: formatNumber(totalEngagement),
       color: "bg-green-500",
     },
-    { label: "Avg Engagement", value: avgEngagement, color: "bg-purple-500" },
-    { label: "Sources", value: sourcesCount, color: "bg-orange-500" },
+    {
+      label: "Avg Engagement",
+      value: formatNumber(avgEngagement),
+      color: "bg-purple-500",
+    },
+    {
+      label: "Sources",
+      value: formatNumber(sourcesCount),
+      color: "bg-orange-500",
+    },
   ];
 
   return (
@@ -348,7 +428,7 @@ const SummaryMetrics = ({ data }) => {
   );
 };
 
-function OverallSlide() {
+export default function OverallSlide() {
   const { loading, error, refetch, AllData, UniqueDataWithSentiment } =
     useData();
 
@@ -461,5 +541,3 @@ function OverallSlide() {
     </div>
   );
 }
-
-export default OverallSlide;

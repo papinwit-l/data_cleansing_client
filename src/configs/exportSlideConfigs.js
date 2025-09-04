@@ -2,6 +2,7 @@ export const EXPORT_SLIDE_COMPONENT_LISTS = [
   { id: "overall-slide", title: "Overall" },
   { id: "overall-slide-2", title: "Overall 2" },
   { id: "overall-slide-3", title: "Overall 3" },
+  { id: "overall-slide-4", title: "Overall 4" },
   // { id: "title-component", title: "Title" },
   // { id: "overall-component", title: "Overall" },
   // { id: "facebook-section-component", title: "Facebook" },
