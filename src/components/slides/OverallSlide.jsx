@@ -442,8 +442,17 @@ function OverallSlide() {
 
             {/* Additional space for future charts */}
             <div className="lg:col-span-1">
-              <div className="bg-gray-50 p-4 rounded-lg shadow-sm border h-full flex items-center justify-center">
-                <span className="text-gray-500">Additional Chart Space</span>
+              <div className="bg-white p-6 rounded-lg shadow-sm border h-full flex flex-col">
+                <h3 className="text-lg font-semibold mb-2 text-gray-700">
+                  Summary
+                </h3>
+                <p className="indent-8">
+                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure,
+                  a suscipit? Nostrum veniam iste quibusdam temporibus minus
+                  nulla animi veritatis, rerum sequi. Quidem vero voluptate nemo
+                  officiis doloremque repellendus adipisci quos nihil explicabo
+                  ipsum eligendi harum, amet, alias cum mollitia!
+                </p>
               </div>
             </div>
           </div>
