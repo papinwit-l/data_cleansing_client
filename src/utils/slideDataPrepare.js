@@ -220,9 +220,46 @@ const getSentimentData = (data) => {
   return sentimentDataArray;
 };
 
+const groupDataByCategory = (data) => {
+  return data.reduce((acc, item) => {
+    const { Category } = item;
+    if (!acc[Category]) {
+      acc[Category] = [];
+    }
+    acc[Category].push(item);
+    return acc;
+  }, {});
+};
+
+const getCategoryData = (data) => {
+  const groupBySourceArray = Object.entries(data);
+  // console.log("groupBySourceArray", groupBySourceArray);
+  const categoryDataArray = groupBySourceArray.map(([key, value]) => {
+    const category = value.reduce((acc, post) => {
+      const category = post.Category || "Unknown";
+      if (!acc[category]) {
+        acc[category] = [post];
+      } else {
+        acc[category].push(post);
+      }
+      return acc;
+    }, {});
+    const result = {
+      category: key,
+      categoryData: category[key],
+    };
+    return result;
+  });
+  // console.log("categoryDataArray", categoryDataArray);
+  return categoryDataArray;
+};
+
 export const prepareData = (data) => {
   // group data by source
   const groupedBySource = groupDataBySource(data);
+
+  // group data by category
+  const groupedByCategory = groupDataByCategory(data);
 
   // console.log("groupedBySource", groupedBySource);
 
@@ -230,9 +267,15 @@ export const prepareData = (data) => {
   const sentimentData = getSentimentData(groupedBySource);
   // console.log("sentimentData", sentimentData);
 
+  // group category from each source
+  const categoryData = getCategoryData(groupedByCategory);
+  // console.log("categoryData", categoryData);
+
   const preparedData = {
     groupedBySource,
+    groupedByCategory,
     sentimentData,
+    categoryData,
   };
   return preparedData;
 };

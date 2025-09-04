@@ -94,7 +94,7 @@ function OverallSlide2() {
       }
 
       const preparedData = prepareData(AllData);
-      console.log("preparedData", preparedData);
+      // console.log("preparedData", preparedData);
 
       const sentimentColors = {
         Positive: "#22c55e",

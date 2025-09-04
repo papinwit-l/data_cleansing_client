@@ -25,6 +25,7 @@ import { prepareDataForExport } from "@/utils/dataProcessors";
 import OverallSlide from "@/components/slides/OverallSlide";
 import OverallSlide2 from "@/components/slides/OverallSlide2";
 import OverallSlide3 from "@/components/slides/OverallSlide3";
+import OverallSlide4 from "@/components/slides/OverallSlide4";
 
 function SlideReport() {
   const [isExporting, setIsExporting] = React.useState(false);
@@ -551,6 +552,7 @@ function SlideReport() {
                 <OverallSlide />
                 <OverallSlide2 />
                 <OverallSlide3 />
+                <OverallSlide4 />
               </div>
             ) : (
               <Card className="h-96 flex items-center justify-center">

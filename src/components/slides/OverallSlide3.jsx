@@ -13,10 +13,17 @@ const SlideHeader = ({ title }) => (
 // Inline HorizontalStackedBar component
 const HorizontalStackedBar = ({ data, title }) => {
   const total = data.reduce((sum, item) => sum + item.value, 0);
-  const dataWithPercentages = data.map((item) => ({
-    ...item,
-    percentage: (item.value / total) * 100,
-  }));
+  const dataWithPercentages = data
+    .sort((a, b) => {
+      if (a.name > b.name) return -1;
+      if (a.name < b.name) return 1;
+      return 0;
+    })
+    .map((item) => ({
+      ...item,
+      percentage: (item.value / total) * 100,
+    }));
+  // console.log("dataWithPercentages", dataWithPercentages);
 
   return (
     <div className="w-full">
@@ -94,7 +101,7 @@ function OverallSlide3() {
       }
 
       const preparedData = prepareData(AllData);
-      console.log("preparedData", preparedData);
+      // console.log("preparedData", preparedData);
 
       const sentimentColors = {
         Positive: "#22c55e",
@@ -227,6 +234,16 @@ function OverallSlide3() {
                 <HorizontalStackedBar data={sourceData.data} title="" />
               </div>
             ))}
+            <div className="bg-white px-2 py-2 rounded border">
+              <h4 className="text-md font-semibold text-gray-700 capitalize mb-2">
+                Summary
+              </h4>
+              <p className="indent-8">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                Deleniti iure in ab deserunt aspernatur nihil? Unde praesentium
+                porro iure molestias?
+              </p>
+            </div>
           </div>
         </div>
       </div>
