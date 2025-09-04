@@ -69,7 +69,7 @@ const HorizontalStackedBar = ({ data, title }) => {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-4 mt-4">
+      <div className="flex flex-wrap gap-4 mt-2">
         {dataWithPercentages.map((item) => (
           <div key={item.name} className="flex items-center gap-2">
             <div
@@ -78,7 +78,7 @@ const HorizontalStackedBar = ({ data, title }) => {
             />
             <span className="text-sm text-gray-600">{item.name}</span>
             <span className="text-sm font-semibold">
-              {item.value} ({item.percentage.toFixed(1)}%)
+              {item.value.toLocaleString()} ({item.percentage.toFixed(1)}%)
             </span>
           </div>
         ))}
@@ -222,7 +222,7 @@ function OverallSlide3() {
           <h3 className="text-lg font-bold mb-4 text-gray-800">
             Sentiment by Source
           </h3>
-          <div className="grid grid-cols-3">
+          <div className="grid grid-cols-3 gap-2">
             {chartData.sentimentBySource.map((sourceData) => (
               <div
                 key={sourceData.source}

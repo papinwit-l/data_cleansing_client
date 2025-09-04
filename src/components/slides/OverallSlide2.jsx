@@ -71,7 +71,7 @@ const HorizontalStackedBar = ({ data, title }) => {
             />
             <span className="text-sm text-gray-600">{item.name}</span>
             <span className="text-sm font-semibold">
-              {item.value} ({item.percentage.toFixed(1)}%)
+              {item.value.toLocaleString()} ({item.percentage.toFixed(1)}%)
             </span>
           </div>
         ))}
@@ -233,21 +233,21 @@ function OverallSlide2() {
             <div className="grid grid-cols-2 gap-4 h-full">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600">
-                  {AllData.length}
+                  {AllData.length.toLocaleString()}
                 </div>
                 <div className="text-sm text-gray-600">Total Posts</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-600">
-                  {chartData.sourceDistribution.length}
+                  {chartData.sourceDistribution.length.toLocaleString()}
                 </div>
                 <div className="text-sm text-gray-600">Sources</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-emerald-600">
-                  {chartData.overallSentiment.find(
-                    (item) => item.name === "Positive"
-                  )?.value || 0}
+                  {chartData.overallSentiment
+                    .find((item) => item.name === "Positive")
+                    ?.value.toLocaleString() || 0}
                 </div>
                 <div className="text-sm text-gray-600">Positive</div>
               </div>
